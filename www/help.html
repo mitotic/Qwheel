@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title></title>
+</head>
+
+<body>
+<h1>Wheel Of Names</h1>
+
+The Wheel Of Names uses a spinning "prize wheel" image (+sound) to
+select a name from a list. This can be used to randomly select
+students in a classroom to answer questions (with or without
+replacement of names).
+
+<p>
+<b>Usage</b>: Click on SPIN to rotate the wheel. When a name is
+selected, a dialog box will appear. Clicking <em>OK</em> will remove the
+selected name from the list, clicking <em>Cancel</em> will retain the name.
+
+<p>
+<b>Setup</b>: To populate the list, simply link to this site using an URL of the form:
+<br>
+<tt><a href="http://pyintro.org/wheel/?session=web101&names=John+Smith;Jane+Doe;Gilgamesh">http://pyintro.org/wheel/?names=John+Smith;Jane+Doe;Gilgamesh</a></tt>
+<br>
+with names separated by semicolons, with any spaces in the names replaced
+with plus (+) signs. Alternatively, the list of semicolon-separated
+names may be entered manually via a dialog box. The optional
+<tt>session</tt> parameter enables multiple parallel sessions.
+Another optional parameter <tt>max</tt> may be used to specify
+the maximum number of names displayed for the final cut (default: 30).
+
+<p>
+<b>Sessions</b>: A sequence of spins starting with a new list of
+names is referred to as a <em>session</em>. Sessions persist
+indefinitely in the browser (using information stored in browser
+local storage). <em>Restarting</em> a session will restore the original
+list. <em>Clearing</em> a session will open a dialog box to enter a
+new list of names.
+
+<p>
+<b>Code</b>: This implementation is based mostly on the jQuery <a
+href="https://github.com/JavoByte/rouletteWheel">rouletteWheel</a> code.
+
+</body> </html>

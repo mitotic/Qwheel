@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript" src="jquery-ui.min.js"></script>
+	<script type="text/javascript" src="src/rouletteWheel.js"></script>
+	<script type="text/javascript">
+// https://github.com/JavoByte/rouletteWheel
+
+var nameStr = "";
+var queryStr = window.location.search;
+if (queryStr.substring(0,12) == "?responders=") {
+    nameStr = queryStr.substring(12)
+} else {
+    nameStr = window.prompt("Enter comma-separated list of names:");
+}
+var nameList = nameStr.split(",");
+var names = [];
+for (var i=0; i < nameList.length; i++) {
+    names.push($.trim(nameList[i]));
+}
+
+$(function(){
+    var items = {};
+    for(var i=0; i < names.length; i++){
+        items[i] = names[i];
+    }
+    var audioElement = document.createElement('audio');
+    audioElement.setAttribute('src', '/roulette/prize_wheel.mp3');
+    $('#canvas').rouletteWheel({
+        items : items,
+        start : function(){ audioElement.play(); },
+        selected : function(key, value){
+          audioElement.pause();
+          if (window.confirm('Selected : '+value+";\nRemove?" )) {
+            var newItems = [];
+            for(var i=0; i < names.length; i++){
+             if (value != names[i])
+               newItems.push(names[i]);
+            }
+            window.location = window.location.pathname + "?responders=" + newItems.join(",");
+          }
+    },
+    spinText : 'SPIN',
+    });
+
+});
+	</script>
+	<title></title>
+</head>
+<body>
+
+	<canvas id="canvas" width="500" height="500"></canvas>
+	
+</body>
+</html>
