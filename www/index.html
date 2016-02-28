@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title></title>
+   <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+   <script type="text/javascript" src="jquery-ui.min.js"></script>
+   <script type="text/javascript" src="src/rouletteWheel.js"></script>
+   <script type="text/javascript">
+
+// Modified from https://github.com/JavoByte/rouletteWheel/demo.html
+
+var defaultMax = 30;
+var defaultMin = 1;
+
+var maxStats = 1 + 4*defaultMax;  // Set to zero for no stats
+var STATE_KEY = "wheelState";
+var STATS_KEY = "_stats_";
+
+function getParameterByName(name) {
+    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+var curDate = new Date().toLocaleString().replace(/:\d{2}\s/,' ');
+
+var sessionID = getParameterByName('session') || '';
+var maxDisplay = parseInt(getParameterByName('max')) || defaultMax;
+var minDisplay = parseInt(getParameterByName('min')) || defaultMin;
+
+function saveObject(key, obj) {
+   localStorage[key] = JSON.stringify(obj);
+}
+
+function deleteObject(key) {
+   delete localStorage[key];
+}
+
+function getObject(key) {
+   try {
+      return JSON.parse(localStorage[key]);
+   } catch(err) {
+     return null;
+   }
+}
+
+function getStats() {
+   if (maxStats > 0) {
+      return getObject(STATS_KEY) || resetStats();
+   } else {
+      deleteObject(STATS_KEY);
+      return null;
+   }
+}
+
+function saveStats(statObj) {
+   if (!statObj)
+      return;
+   saveObject(STATS_KEY, statObj);
+}
+
+function setState(state) {
+   saveObject(STATE_KEY, state);
+}
+
+function getState() {
+   var state = getObject(STATE_KEY) || {};
+   setState(state);
+   return state;
+}
+
+function resetStats() {
+   return {count: 0, attempts: new Uint32Array(maxStats),
+                         hits: new Uint32Array(maxStats),
+                     fraction: new Float32Array(maxStats)};
+}
+
+function reloadPage() {
+   var query = sessionID ? ('?session='+sessionID) : ''
+   if (maxDisplay != defaultMax)
+      query += (query ? '&' : '?') + 'max='+maxDisplay;
+   window.location = window.location.pathname+query;
+}
+
+function accumStats(temObj, key, count) {
+   if (!temObj)
+      return;
+   if ((key in temObj.attempts)) {
+      temObj.count += 1;
+      temObj.hits[key] += count;
+      for (var j=0; j<count; j++) {
+         temObj.attempts[j] += 1;
+         temObj.fraction[j] = (1.0*temObj.hits[j])/temObj.attempts[j];
+      }
+   }
+}
+
+function wheelClearAll() {
+   deleteObject(STATE_KEY);
+   reloadPage();
+}
+
+function wheelClear() {
+    if (sessionID in wheelState) {
+        delete wheelState[sessionID];
+    }
+    setState(wheelState);
+    reloadPage();
+}
+
+function wheelRestart() {
+   if (sessionID in wheelState) {
+      wheelState[sessionID]["names"] = wheelState[sessionID]["allNames"];
+      wheelState[sessionID]["time"] = curDate;
+      setState(wheelState);
+      reloadPage();
+   }
+}
+ 
+if (getParameterByName('clearall')) {
+    wheelClearAll();
+}
+
+if (getParameterByName('clear')) {
+    wheelClear();
+}
+
+if (getParameterByName('restart')) {
+    wheelRestart();
+}
+
+var statsObj = getStats();  
+var wheelState = getState();
+
+var curNameStr = "";  
+var sessionTime = "";
+
+if (sessionID in wheelState) {
+   curNameStr = wheelState[sessionID]["names"];
+   sessionTime = wheelState[sessionID]["time"];
+}
+
+var newNameStr = getParameterByName('names');
+if (!newNameStr && !curNameStr) {
+    newNameStr = window.prompt("Enter semicolon-separated list of names:", "John Smith;Jane Doe;Gilgamesh") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
+}
+
+if (newNameStr) {
+    var temNameList = newNameStr.split(";");
+    var temNames = [];
+    for (var i=0; i < temNameList.length; i++) {
+        temNames.push($.trim(temNameList[i]));
+    }
+    curNameStr = temNames.join(";")
+    sessionTime = curDate;
+    wheelState[sessionID] = {names: curNameStr, allNames: curNameStr, time: sessionTime};
+    setState(wheelState);
+}
+
+if (newNameStr) {
+    if (window.confirm("Start new session "+sessionID )) {
+       reloadPage();
+    }
+}
+
+var nameList = curNameStr.split(";");
+var curNames = [];
+for (var i=0; i < nameList.length; i++) {
+    curNames.push(nameList[i]);
+}
+
+function selectRange(nitems, nportion) {
+   // Return [startOffset, endOffset] to divide nitems into nportion parts
+   // If incomplete last part is too small, the last and last-but-one
+   // are combined and halved
+   var startOffset = 0;
+   var endOffset = nitems;
+   var nparts = Math.ceil(nitems/nportion); 
+   if (nparts > 1) {
+      // Select subset of names to display (randomly)
+      var isel = Math.floor(Math.random()*nitems); // Randomly choose an item
+      var ipart = Math.floor(isel/nportion);       // Figure out which part it falls in
+      var remItems = nitems % nportion; 
+      if (remItems > 0 && ipart >= nparts-2) {
+         // Small remainder list; last or last-but-one part
+         var iselmod = isel - (nparts-2)*nportion;
+         var lastButOneItems = Math.ceil( (nportion + remItems)/2 );
+         var lastItems = (nportion + remItems) - lastButOneItems;
+         if (iselmod < lastButOneItems) {
+            startOffset = (nparts-2)*nportion;
+            endOffset = startOffset + lastButOneItems;
+         } else {
+            startOffset = (nparts-2)*nportion+lastButOneItems;
+            endOffset = startOffset + lastItems;
+         }
+      } else {
+         startOffset = ipart*nportion;
+         endOffset = startOffset + ((remItems && ipart == nparts-1) ? remItems : nportion);
+      }
+   }
+   return [startOffset, endOffset];
+}
+
+function testSelRangeStats(niter) {
+   var temStats = resetStats();
+   var maxCount = curNames.length;
+   for (var count=minDisplay; count<=maxCount; count++) {
+      var nportions = Math.ceil(count/maxDisplay);
+      var portionCount = new Uint32Array(nportions);
+      for (var i=0; i<niter; i++) {
+         var displayRange = selectRange(count, maxDisplay);
+         var isel = displayRange[0] + Math.floor(Math.random()*(displayRange[1]-displayRange[0]));
+         accumStats(temStats, isel, count);
+         portionCount[Math.ceil(displayRange[0]/maxDisplay)] += 1;
+      }
+      var nfrac = new Float32Array(nportions);
+      for (var j=0; j<nportions; j++) nfrac[j] = portionCount[j]/(1.0*niter);
+      console.log("portionStats: ", count, nfrac);
+   }
+   console.log("accumStats: ", temStats);
+}
+
+function displayWheel() {
+    if (!curNames || !curNames.length)
+       return;
+
+    $(document).attr('title', 'Wheel of Names: '+sessionID);
+    $("#sessionid").text(sessionID);
+    $("#sessiontitle").text(sessionID);
+    $("#sessiontime").text(sessionTime);
+
+    var displayRange = selectRange(curNames.length, maxDisplay);
+    var d0 = displayRange[0];
+    var d1 = displayRange[1];
+    var items = {};
+    for(var i=d0; i < d1; i++){
+        items[i] = curNames[i];
+    }
+    if (d0 > 0 || d1 < curNames.length) $("#sessionrange").text(curNames[d0]+" - "+curNames[d1-1]);
+
+    var audioElement = null;
+    try { audioElement = document.createElement("audio");
+          audioElement.setAttribute("src", "prize_wheel.mp3");
+    } catch (err) { console.log("Error in audio:", err);
+    }
+
+    var roulettePars = {
+        items : items,
+        start : function() {
+             try { audioElement.play(); } catch (err) {}
+        },
+
+        selected : function(key, value) {
+          console.log("selected:", key, value);
+          try { audioElement.pause();
+                audioElement.currentTime = 0; } catch (err) {}
+
+          accumStats(statsObj, key, curNames.length);
+          if (window.confirm("Selected name: "+value+";\n Remove?" )) {
+            var newNames = [];
+            for (var i=0; i < curNames.length; i++) {
+              if (value != curNames[i])
+                newNames.push(curNames[i]);
+            }
+            curNames = newNames;
+            wheelState[sessionID]["names"] = curNames.join(";");
+            setState(wheelState);
+          }
+          if (curNames.length < minDisplay) {
+              wheelRestart();
+          } else {
+              reloadPage();
+          }
+        },
+        spinText : "SPIN",
+    }
+    $("#canvas").rouletteWheel(roulettePars);
+}
+
+$(document).ready( displayWheel );
+
+	</script>
+	<title></title>
+</head>
+<body>
+
+     <b><em>Wheel of Names</em>: &nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="wheelClear();">New</a>&nbsp;&nbsp;&nbsp;
+      <a href="help.html">Help</a>
+     </b>
+    <p>
+    <b id="header">Session <span id="sessionid"></span> started on <em id="sessiontime"></em>
+    </b>
+    <h3><em id="sessionrange"></em>
+    </h3>
+    <p>
+    <canvas id="canvas" width="500" height="500"></canvas>
+	
+</body>
+</html>
