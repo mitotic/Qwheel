@@ -1,4 +1,4 @@
-# Wheel of Names 
+# SpinWheel 
 
 ## Description
 
@@ -14,7 +14,7 @@ without having to install any code.
 See the [help file](http://pyintro.org/wheel/help.html)
 for more detailed usage info.
 
-![Alt text](www/img/WheelOfNames.png?raw=true "Wheel")
+![Alt text](www/img/screenshot.png?raw=true "Wheel")
 
 ## Implementation
 
