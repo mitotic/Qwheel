@@ -8,13 +8,12 @@
    <script type="text/javascript">
 
 // Modified from https://github.com/JavoByte/rouletteWheel/demo.html
-
 var defaultMax = 30;
 var defaultMin = 1;
 
 var maxStats = 1 + 4*defaultMax;  // Set to zero for no stats
 var STATE_KEY = "wheelState";
-var STATS_KEY = "_stats_";
+var STATS_KEY = "wheelStats";
 
 function getParameterByName(name) {
     var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
@@ -52,10 +51,10 @@ function getStats() {
    }
 }
 
-function saveStats(statObj) {
-   if (!statObj)
+function saveStats(temObj) {
+   if (!temObj)
       return;
-   saveObject(STATS_KEY, statObj);
+   saveObject(STATS_KEY, temObj);
 }
 
 function setState(state) {
@@ -128,6 +127,7 @@ if (getParameterByName('restart')) {
     wheelRestart();
 }
 
+var displayStats = getParameterByName('stats');
 var statsObj = getStats();  
 var wheelState = getState();
 
@@ -141,11 +141,11 @@ if (sessionID in wheelState) {
 
 var newNameStr = getParameterByName('names');
 if (!newNameStr && !curNameStr) {
-    newNameStr = window.prompt("Enter semicolon-separated list of names:", "John Smith;Jane Doe;Gilgamesh") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
+    newNameStr = window.prompt("Enter comma- or semicolon-separated list of names:", "John Smith;Jane Doe;Gilgamesh") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
 }
 
-if (newNameStr) {
-    var temNameList = newNameStr.split(";");
+ if (newNameStr) {
+    var temNameList = (newNameStr.indexOf(";") > 0) ? newNameStr.split(";") : newNameStr.split(",");
     var temNames = [];
     for (var i=0; i < temNameList.length; i++) {
         temNames.push($.trim(temNameList[i]));
@@ -200,7 +200,8 @@ function selectRange(nitems, nportion) {
    return [startOffset, endOffset];
 }
 
-function testSelRangeStats(niter) {
+function showStats() {
+   var niter = 100000;
    var temStats = resetStats();
    var maxCount = curNames.length;
    for (var count=minDisplay; count<=maxCount; count++) {
@@ -216,8 +217,23 @@ function testSelRangeStats(niter) {
       for (var j=0; j<nportions; j++) nfrac[j] = portionCount[j]/(1.0*niter);
       console.log("portionStats: ", count, nfrac);
    }
-   console.log("accumStats: ", temStats);
+
+   var output = "Test iterations = "+niter+"\n";
+   for (var j=0; j<maxCount; j++) {
+      output += "Test probability: "+temStats.fraction[j]+" \t"+curNames[j]+"\n";
+   }
+
+   if (statsObj) {
+      output += "\nActual iterations = "+statsObj.count+"\n";
+      for (var j=0; j<maxCount; j++) {
+         output += "Actual probability of name"+(j+1)+": "+statsObj.fraction[j]+"\n";
+      }
+   }
+
+   $("#pretext").text(output);
+   console.log("showStats: ", temStats);
 }
+
 
 function displayWheel() {
     if (!curNames || !curNames.length)
@@ -227,6 +243,7 @@ function displayWheel() {
     $("#sessionid").text(sessionID);
     $("#sessiontitle").text(sessionID);
     $("#sessiontime").text(sessionTime);
+    if (displayStats) showStats();
 
     var displayRange = selectRange(curNames.length, maxDisplay);
     var d0 = displayRange[0];
@@ -255,6 +272,7 @@ function displayWheel() {
                 audioElement.currentTime = 0; } catch (err) {}
 
           accumStats(statsObj, key, curNames.length);
+          saveStats(statsObj);
           if (window.confirm("Selected name: "+value+";\n Remove?" )) {
             var newNames = [];
             for (var i=0; i < curNames.length; i++) {
@@ -298,6 +316,7 @@ body { font-family:helvetica,sans-serif }
     </h3>
     <p>
     <canvas id="canvas" width="500" height="500"></canvas>
+    <pre id="pretext"></pre>
 	
 </body>
 </html>
