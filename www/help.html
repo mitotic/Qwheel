@@ -73,17 +73,20 @@ href="https://github.com/mitotic/spinwheel">Github</a>. You can
 download the code and open the <tt>www/index.html</tt> in your browser
 to run SpinWheel locally, even without an internet connection, by appending
 parameters to the file URL (<tt>.../index.html?names=...</tt>). To
-customize, modify the <tt>www/index.html</tt> file.  (An undocumented
-option <tt>stats=1</tt> can be specified to verify the randomness of
-the selection algorithm.) This implementation is based mostly on the
-jQuery <a
-href="https://github.com/JavoByte/rouletteWheel">rouletteWheel</a>
+customize, modify the <tt>www/index.html</tt> file.  
+This implementation uses the jQuery
+<a href="https://github.com/JavoByte/rouletteWheel">rouletteWheel</a>
 code.
 
-<p> <b>Notes:</b><br>
-1. The maximum length of an URL is about 2000 characters. If names are
+<p> <b>Notes:</b>
+<ol>
+<li>The maximum length of an URL is about 2000 characters. If names are
 shortened to about 10 characters each, a maximum of about 200 names
 can be handled in the URL. For a longer list, pasting into the dialog
 box should work.
-
+</li>
+<li>An undocumented option <tt>stats=1</tt> can be specified to verify
+the randomness of the selection algorithm.
+</li>
+</ol>
 </body> </html>
