@@ -243,6 +243,7 @@ function displayWheel() {
     $("#sessionid").text(sessionID);
     $("#sessiontitle").text(sessionID);
     $("#sessiontime").text(sessionTime);
+    $("#sessioncount").text(curNames.length+" left");
     if (displayStats) showStats();
 
     var displayRange = selectRange(curNames.length, maxDisplay);
@@ -310,7 +311,7 @@ body { font-family:helvetica,sans-serif }
       <a href="https://github.com/mitotic/spinwheel">Github</a>
      
     <p>
-    <span id="header">Session <b id="sessionid"></b> started on <em id="sessiontime"></em>
+    <span id="header">Session <b id="sessionid"></b> started on <em id="sessiontime"></em> (<b id="sessioncount"></b>)
     </span>
     <h3><em id="sessionrange"></em>
     </h3>

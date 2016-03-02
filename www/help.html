@@ -6,34 +6,38 @@
 <body>
 <h1>SpinWheel</h1>
 
-A common problem in teaching is that if you pose a question to a
+A common problem facing teachers is that if you pose a question to a
 class, the same few students, usually in the first row, answer
 them. These students are typically not representative of the class,
-being more advanced and also paying attention. To get around this problem,
-SpinWheel uses a spinning "prize wheel" image (+sound) to randomly
-select a name from a list. Once a name is selected, it is removed from
-the list (although this behavior can be suppressed).
+being more advanced and also paying attention. To get around this
+problem, SpinWheel uses a spinning "prize wheel" image (+sound) to
+randomly select a name from a list. Once a name is selected, it is
+removed from the list (although this behavior can be
+suppressed). Using SpinWheel is a great way to fairly distribute
+questions in the class and also get to know the names of your
+students.
 
 <p>
 
-<b>Setup</b>: Create a list of names from the class roster (usually a
-spreadsheet). You can use full names, or an abbreviated form, such as
-first name plus the inital of last name. Join the names together, with
-a comma or a semicolon as the separator, replacing any spaces in the
-names with plus (+) signs. Then generate a URL string that looks like this:
-<br> <tt><a
+<b>Setup</b>: No accounts or logins required! Create a list of names
+from the class roster (usually a spreadsheet). You can use full names,
+or an abbreviated form, such as first name plus the inital of last
+name. Join the names together, with a comma or a semicolon as the
+separator, replacing any spaces in the names with plus (+) signs. Then
+generate a URL string that looks like this: <br> <tt><a
 href="http://pyintro.org/wheel/?session=math101&names=John+Smith;Jane+Doe;Gilgamesh">http://pyintro.org/wheel/?session=math101&names=John+Smith;Jane+Doe;Gilgamesh</a></tt>
 
 <p>The above URL can be stored in a file and reused to restart a
-session, as needed. Note that the query symbol (<tt>?</tt>) denotes the start of
-the parameter list and the ampersand (<tt>&amp;</tt>) separates
-different parameters. The optional <tt>session</tt> parameter enables
-multiple parallel sessions. Another optional parameter <tt>max</tt>
-may be used to specify the maximum number of names displayed (default:
-30). If there are more names than this maximum, a random subset of
-names is created and displayed. If the <tt>names</tt> parameter is
-omitted, the list of comma- or semicolon-separated names should be
-entered manually via a dialog box.
+session, as needed. Note that the query symbol (<tt>?</tt>) denotes
+the start of the parameter list and the ampersand (<tt>&amp;</tt>)
+separates different parameters. The optional <tt>session</tt>
+parameter enables multiple parallel sessions. Another optional
+parameter <tt>max</tt> may be used to specify the maximum number of
+names displayed (default: 30). If there are more names than this
+maximum, a random subset of consecutive names from the list is
+pre-selected and displayed in the wheel. If the <tt>names</tt>
+parameter is omitted, the list of comma- or semicolon-separated names
+should be entered manually via a dialog box.
 
 <p>
 <b>Usage</b>: Click on SPIN to rotate the wheel. When a name is
@@ -56,8 +60,8 @@ href="http://pyintro.org/wheel/">http://pyintro.org/wheel/</a></tt>
 <em>Enter names via dialog box for default session</em>
 <br>
 <tt><a
-href="http://pyintro.org/wheel/?names=John+Smith,Jane+Doe">http://pyintro.org/wheel/?names=John+Smith,Jane+Doe</a></tt>
-<em>Default session, comma-separated names</em>
+href="http://pyintro.org/wheel/?names=JohnS,JaneD">http://pyintro.org/wheel/?names=JohnS,JaneD</a></tt>
+<em>Default session, comma-separated first names+last initials</em>
 <br>
 <tt><a
 href="http://pyintro.org/wheel/?session=calc101&max=15&names=John+Smith,
@@ -65,12 +69,21 @@ jr.;Jane+Doe">http://pyintro.org/wheel/?session=calc101&names=John+Smith,jr.;Jan
 <em>Named session, semicolon-separated names, max. display of 15 names</em>
 
 <p> <b>Code</b>: The source code is available on <a
-href="https://github.com/mitotic/spinwheel">Github</a>. To customize
-it, modify the <tt>www/index.html</tt> file and install in your own
-web site. (An undocumented option <tt>stats=1</tt> can be specified to
-verify the randomness of the selection algorithm.) This implementation
-is based mostly on the jQuery <a
+href="https://github.com/mitotic/spinwheel">Github</a>. You can
+download the code and open the <tt>www/index.html</tt> in your browser
+to run SpinWheel locally, even without an internet connection, by appending
+parameters to the file URL (<tt>.../index.html?names=...</tt>). To
+customize, modify the <tt>www/index.html</tt> file.  (An undocumented
+option <tt>stats=1</tt> can be specified to verify the randomness of
+the selection algorithm.) This implementation is based mostly on the
+jQuery <a
 href="https://github.com/JavoByte/rouletteWheel">rouletteWheel</a>
 code.
+
+<p> <b>Notes:</b><br>
+1. The maximum length of an URL is about 2000 characters. If names are
+shortened to about 10 characters each, a maximum of about 200 names
+can be handled in the URL. For a longer list, pasting into the dialog
+box should work.
 
 </body> </html>
