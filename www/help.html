@@ -48,10 +48,13 @@ selected name from the list, clicking <em>Cancel</em> will retain the name.
 names is referred to as a <em>session</em>. The default session has a
 blank name. Alternate session names are specified using the optional
 <tt>session</tt> parameter in the URL and persist indefinitely in the
-browser (using information stored in browser local
-storage). <em>Restarting</em> a session will restore the original list
-of names. <em>Clearing</em> a session will open a dialog box to enter
-a new list of names.
+browser (using information stored in browser local storage). The
+<em>drop down</em> menu may be used to switch between sessions or
+create a new session. <em>Restarting</em> a session will restore the
+original list of names. <em>Deleting</em> a session will erase it from
+the browser. (Deleting the default session will re-create it.)
+<em>Exporting</em> a session displays an URL that can be copied and
+pasted in a different browser.
 
 <p>
 <b>Sample URLs</b>:<br>
@@ -80,13 +83,15 @@ code.
 
 <p> <b>Notes:</b>
 <ol>
+<li>Reloading the page helps if the wheel does not appear. 
+</li>
 <li>The maximum length of an URL is about 2000 characters. If names are
 shortened to about 10 characters each, a maximum of about 200 names
 can be handled in the URL. For a longer list, pasting into the dialog
 box should work.
 </li>
-<li>An undocumented option <tt>stats=1</tt> can be specified to verify
-the randomness of the selection algorithm.
+<li>An undocumented option <tt>stats=1</tt> can be specified to verify 
+the randomness of the selection algorithm. 
 </li>
 </ol>
 </body> </html>

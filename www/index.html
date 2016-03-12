@@ -23,6 +23,9 @@ function getParameterByName(name) {
 var curDate = new Date().toLocaleString().replace(/:\d{2}\s/,' ');
 
 var sessionID = getParameterByName('session') || '';
+if (sessionID == 'default')
+   sessionID = '';
+
 var maxDisplay = parseInt(getParameterByName('max')) || defaultMax;
 var minDisplay = parseInt(getParameterByName('min')) || defaultMin;
 
@@ -99,22 +102,39 @@ function wheelClearAll() {
 }
 
 function wheelClear() {
+    if (!window.confirm("Delete session "+sessionID+"?")) {
+       return;
+    }
     if (sessionID in wheelState) {
         delete wheelState[sessionID];
     }
     setState(wheelState);
+    sessionID = '';
     reloadPage();
 }
 
 function wheelRestart() {
    if (sessionID in wheelState) {
-      wheelState[sessionID]["names"] = wheelState[sessionID]["allNames"];
-      wheelState[sessionID]["time"] = curDate;
+      wheelState[sessionID].names = wheelState[sessionID].allNames;
+      wheelState[sessionID].time = curDate;
       setState(wheelState);
       reloadPage();
    }
 }
- 
+
+function wheelExport() {
+   var query = sessionID ? ('?session='+sessionID) : ''
+   if (maxDisplay != defaultMax)
+      query += (query ? '&' : '?') + 'max='+maxDisplay;
+   query += (query ? '&' : '?')+'names=';
+   query += encodeURI(wheelState[sessionID].allNames.replace(/ /g, '+'));
+   if (wheelState[sessionID].names != wheelState[sessionID].allNames) {
+      query += '&curnames=';
+      query += encodeURI(wheelState[sessionID].names.replace(/ /g, '+'));
+   }
+   $('body').text(window.location.origin+window.location.pathname+query);
+}
+
 if (getParameterByName('clearall')) {
     wheelClearAll();
 }
@@ -131,12 +151,15 @@ var displayStats = getParameterByName('stats');
 var statsObj = getStats();  
 var wheelState = getState();
 
-var curNameStr = "";  
+var curNameSpec = getParameterByName('curnames') || "";   
+
+var curNameStr = curNameSpec;
 var sessionTime = "";
 
 if (sessionID in wheelState) {
-   curNameStr = wheelState[sessionID]["names"];
-   sessionTime = wheelState[sessionID]["time"];
+   sessionTime = wheelState[sessionID].time;
+   if (!curNameSpec) 
+      curNameStr = wheelState[sessionID].names;
 }
 
 var newNameStr = getParameterByName('names');
@@ -144,28 +167,40 @@ if (!newNameStr && !curNameStr) {
     newNameStr = window.prompt("Enter comma- or semicolon-separated list of names:", "John Smith;Jane Doe;Gilgamesh") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
 }
 
- if (newNameStr) {
+if (newNameStr) {
     var temNameList = (newNameStr.indexOf(";") > 0) ? newNameStr.split(";") : newNameStr.split(",");
     var temNames = [];
     for (var i=0; i < temNameList.length; i++) {
         temNames.push($.trim(temNameList[i]));
     }
-    curNameStr = temNames.join(";")
+    var temNameStr = temNames.join(";");
+    if (!curNameSpec) 
+       curNameStr = temNameStr;
     sessionTime = curDate;
-    wheelState[sessionID] = {names: curNameStr, allNames: curNameStr, time: sessionTime};
+    wheelState[sessionID] = {names: curNameStr, allNames: temNameStr, time: sessionTime};
     setState(wheelState);
 }
 
 if (newNameStr) {
-    if (window.confirm("Start new session "+sessionID )) {
+    if (curNameSpec) {
+       alert("Restoring session "+sessionID);
+       reloadPage();
+    } else if (window.confirm("Start new session "+sessionID )) {
        reloadPage();
     }
 }
 
-var nameList = curNameStr.split(";");
+var allNameList = wheelState[sessionID].allNames.split(";"); 
+var allNameObj = {};
+for (var i=0; i < allNameList.length; i++) {
+   allNameObj[allNameList[i]] = 1;
+}
+
+var nameList = curNameStr.split(";"); 
 var curNames = [];
 for (var i=0; i < nameList.length; i++) {
-    curNames.push(nameList[i]);
+    if (nameList[i] in allNameObj)
+       curNames.push(nameList[i]);
 }
 
 function selectRange(nitems, nportion) {
@@ -236,14 +271,39 @@ function showStats() {
 
 
 function displayWheel() {
+    $.each(wheelState, function(key, value) {   
+           $('#stateSelect')
+               .append($("<option></option>")
+               .attr("value",key)
+               .text(key?key:'default')); 
+		 });
+
+    $('#stateSelect')
+               .append($("<option></option>")
+               .attr("value","new")
+               .text("new")); 
+
+    $('#stateSelect').val(sessionID);
+
+    $('#stateSelect').change(function() {
+       var selState = $('#stateSelect :selected').val();
+       console.log("Selected state '"+selState+"'");
+       if (selState == sessionID)
+           return;
+       if (selState == 'new') {
+           selState = window.prompt('Enter new session name:');
+        }
+	sessionID = selState;
+	reloadPage();
+     });
+		 
     if (!curNames || !curNames.length)
        return;
 
     $(document).attr('title', 'SpinWheel: '+sessionID);
-    $("#sessionid").text(sessionID);
     $("#sessiontitle").text(sessionID);
     $("#sessiontime").text(sessionTime);
-    $("#sessioncount").text(curNames.length+" left");
+    $("#sessioncount").text(curNames.length+" of "+allNameList.length);
     if (displayStats) showStats();
 
     var displayRange = selectRange(curNames.length, maxDisplay);
@@ -281,7 +341,7 @@ function displayWheel() {
                 newNames.push(curNames[i]);
             }
             curNames = newNames;
-            wheelState[sessionID]["names"] = curNames.join(";");
+            wheelState[sessionID].names = curNames.join(";");
             setState(wheelState);
           }
           if (curNames.length < minDisplay) {
@@ -304,14 +364,15 @@ body { font-family:helvetica,sans-serif }
 </head>
 <body>
 
-      <b>SpinWheel</b> &nbsp;&nbsp;&nbsp;
+      <b>SpinWheel</b>
+      session: <select id="stateSelect"></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
-      <a href="#" onclick="wheelClear();">New</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="wheelClear();">Delete</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="wheelExport();">Export</a>&nbsp;&nbsp;&nbsp;
       <a href="help.html">Help</a>&nbsp;&nbsp;&nbsp;
       <a href="https://github.com/mitotic/spinwheel">Github</a>
-     
     <p>
-    <span id="header">Session <b id="sessionid"></b> started on <em id="sessiontime"></em> (<b id="sessioncount"></b>)
+    <span id="header">Started: <em id="sessiontime"></em> (<b id="sessioncount"></b>)
     </span>
     <h3><em id="sessionrange"></em>
     </h3>
