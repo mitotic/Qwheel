@@ -291,11 +291,14 @@ function displayWheel() {
        if (selState == sessionID)
            return;
        if (selState == 'new') {
-           selState = window.prompt('Enter new session name:');
+           selState = window.prompt('Enter new session name (no spaces):');
+           if (selState)
+              sessionID = selState.replace(/ /g,'');
+        } else {
+           sessionID = selState;
         }
-	sessionID = selState;
 	reloadPage();
-     });
+    });
 		 
     if (!curNames || !curNames.length)
        return;
@@ -363,14 +366,13 @@ body { font-family: arial, helvetica, sans-serif; }
 </style>
 </head>
 <body>
-
       <b>SpinWheel</b>
       session: <select id="stateSelect"></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelClear();">Delete</a>&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelExport();">Export</a>&nbsp;&nbsp;&nbsp;
-      <a href="help.html">Help</a>&nbsp;&nbsp;&nbsp;
-      <a href="https://github.com/mitotic/spinwheel">Github</a>
+      <a href="help.html" target="_blank">Help</a>&nbsp;&nbsp;&nbsp;
+      <a href="https://github.com/mitotic/spinwheel" target="_blank">Github</a>
     <p>
     <span id="header">Started: <em id="sessiontime"></em> (<b id="sessioncount"></b>)
     </span>
