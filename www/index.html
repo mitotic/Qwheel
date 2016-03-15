@@ -303,7 +303,7 @@ function displayWheel() {
     if (!curNames || !curNames.length)
        return;
 
-    $(document).attr('title', 'SpinWheel: '+sessionID);
+    $(document).attr('title', 'Qwheel: '+sessionID);
     $("#sessiontitle").text(sessionID);
     $("#sessiontime").text(sessionTime);
     $("#sessioncount").text(curNames.length+" of "+allNameList.length);
@@ -366,13 +366,13 @@ body { font-family: arial, helvetica, sans-serif; }
 </style>
 </head>
 <body>
-      <b>SpinWheel</b>
+      <b>Qwheel</b>
       session: <select id="stateSelect"></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelClear();">Delete</a>&nbsp;&nbsp;&nbsp;
       <a href="#" onclick="wheelExport();">Export</a>&nbsp;&nbsp;&nbsp;
       <a href="help.html" target="_blank">Help</a>&nbsp;&nbsp;&nbsp;
-      <a href="https://github.com/mitotic/spinwheel" target="_blank">Github</a>
+      <a href="https://github.com/mitotic/Qwheel" target="_blank">Github</a>
     <p>
     <span id="header">Started: <em id="sessiontime"></em> (<b id="sessioncount"></b>)
     </span>

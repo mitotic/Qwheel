@@ -1,9 +1,9 @@
-# SpinWheel 
+# Qwheel
 
 ## Description
 
-This is a front-end implementation of a spinning "prize wheel" image
-(+sound) to select a name from a list, based upon
+Question Wheel (Qwheel) is a front-end implementation of a spinning
+"prize wheel" image (+sound) to select a name from a list, based upon
 [jQuery Roulette Wheel](https://github.com/JavoByte/rouletteWheel).
 This can be used to randomly select students in a classroom to answer
 questions (with or without replacement of names).
