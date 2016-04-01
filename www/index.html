@@ -164,11 +164,20 @@ if (sessionID in wheelState) {
 
 var newNameStr = getParameterByName('names');
 if (!newNameStr && !curNameStr) {
-    newNameStr = window.prompt("Enter comma- or semicolon-separated list of names:", "John Smith;Jane Doe;Gilgamesh") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
+    newNameStr = window.prompt("Enter a list of names, separated by line-breaks, semicolons, commas or spaces:",
+"Jane Doe;John Doe;John Smith") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
 }
 
 if (newNameStr) {
-    var temNameList = (newNameStr.indexOf(";") > 0) ? newNameStr.split(";") : newNameStr.split(",");
+    var temNameList;
+    if (newNameStr.indexOf("\r") > 0 || newNameStr.indexOf("\n") > 0)
+       temNameList = newNameStr.trim().split(/[\r\n]+/);
+    else if (newNameStr.indexOf(";") > 0) 
+       temNameList = newNameStr.split(";")
+    else if (newNameStr.indexOf(",") > 0)
+       temNameList = newNameStr.split(",");
+    else
+       temNameList = newNameStr.trim().split(/\s+/);
     var temNames = [];
     for (var i=0; i < temNameList.length; i++) {
         temNames.push($.trim(temNameList[i]));
@@ -280,8 +289,8 @@ function displayWheel() {
 
     $('#stateSelect')
                .append($("<option></option>")
-               .attr("value","new")
-               .text("new")); 
+               .attr("value","NEW")
+               .text("NEW")); 
 
     $('#stateSelect').val(sessionID);
 
@@ -290,7 +299,7 @@ function displayWheel() {
        console.log("Selected state '"+selState+"'");
        if (selState == sessionID)
            return;
-       if (selState == 'new') {
+       if (selState == "NEW") {
            selState = window.prompt('Enter new session name (no spaces):');
            if (selState)
               sessionID = selState.replace(/ /g,'');
