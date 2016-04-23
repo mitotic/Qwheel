@@ -7,6 +7,9 @@
    <script type="text/javascript" src="src/rouletteWheel.js"></script>
    <script type="text/javascript">
 
+var Qwheel = {};
+
+(function ($, Qwheel) {
 // Modified from https://github.com/JavoByte/rouletteWheel/demo.html
 var defaultMax = 30;
 var defaultMin = 1;
@@ -21,10 +24,6 @@ function getParameterByName(name) {
 }
 
 var curDate = new Date().toLocaleString().replace(/:\d{2}\s/,' ');
-
-var sessionID = getParameterByName('session') || '';
-if (sessionID == 'default')
-   sessionID = '';
 
 var maxDisplay = parseInt(getParameterByName('max')) || defaultMax;
 var minDisplay = parseInt(getParameterByName('min')) || defaultMin;
@@ -76,8 +75,8 @@ function resetStats() {
                      fraction: new Float32Array(maxStats)};
 }
 
-function reloadPage() {
-   var query = sessionID ? ('?session='+sessionID) : ''
+function reloadPage(newSessionID) {
+   var query = newSessionID ? ('?session='+newSessionID) : ''
    if (maxDisplay != defaultMax)
       query += (query ? '&' : '?') + 'max='+maxDisplay;
    window.location = window.location.pathname+query;
@@ -96,33 +95,52 @@ function accumStats(temObj, key, count) {
    }
 }
 
-function wheelClearAll() {
+
+var displayStats = getParameterByName('stats');
+var statsObj = getStats();  
+var wheelState = getState();
+
+Qwheel.wheelReset = function () {
    deleteObject(STATE_KEY);
    reloadPage();
 }
 
-function wheelClear() {
-    if (!window.confirm("Delete session "+sessionID+"?")) {
-       return;
+function WheelSession(sessionID) {
+    this.sessionID = sessionID;
+    this.curNameSpec = getParameterByName('curnames') || "";
+
+    this.curNameStr = this.curNameSpec;
+    this.sessionTime = "";
+
+    if (this.sessionID in wheelState) {
+        this.sessionTime = wheelState[this.sessionID].time;
+        if (!this.curNameSpec) 
+            this.curNameStr = wheelState[this.sessionID].names;
     }
-    if (sessionID in wheelState) {
-        delete wheelState[sessionID];
-    }
-    setState(wheelState);
-    sessionID = '';
-    reloadPage();
 }
 
-function wheelRestart() {
-   if (sessionID in wheelState) {
-      wheelState[sessionID].names = wheelState[sessionID].allNames;
-      wheelState[sessionID].time = curDate;
+WheelSession.prototype.wheelClear = function () {
+    if (!window.confirm("Delete session "+this.sessionID+"?")) {
+       return;
+    }
+    if (this.sessionID in wheelState) {
+        delete wheelState[this.sessionID];
+    }
+    setState(wheelState);
+    reloadPage('');
+}
+
+WheelSession.prototype.wheelRestart = function () {
+   if (this.sessionID in wheelState) {
+      wheelState[this.sessionID].names = wheelState[this.sessionID].allNames;
+      wheelState[this.sessionID].time = curDate;
       setState(wheelState);
-      reloadPage();
+      reloadPage(this.sessionID);
    }
 }
 
-function wheelExport() {
+WheelSession.prototype.wheelExport = function () {
+   var sessionID = this.sessionID;
    var query = sessionID ? ('?session='+sessionID) : ''
    if (maxDisplay != defaultMax)
       query += (query ? '&' : '?') + 'max='+maxDisplay;
@@ -136,86 +154,217 @@ function wheelExport() {
 }
 
 
-if (getParameterByName('clearall')) {
-    wheelClearAll();
+WheelSession.prototype.start = function (newNameStr) {
+    console.log('WheelSession.start:');
+    if (!newNameStr && !this.curNameStr) {
+        showPopup(this.setupWheel.bind(this));
+        return;
+    }
+    this.setupWheel();
+}
+
+WheelSession.prototype.setupWheel = function (newNameStr) {
+    console.log('WheelSession.setupWheel:', newNameStr);
+    this.newNameStr = newNameStr || getParameterByName('names');
+
+    if (this.newNameStr) {
+        var temNameList;
+        if (this.newNameStr.indexOf("\r") > 0 || this.newNameStr.indexOf("\n") > 0)
+            temNameList = this.newNameStr.trim().split(/[\r\n]+/);
+        else if (this.newNameStr.indexOf(";") > 0) 
+            temNameList = this.newNameStr.split(";")
+        else if (this.newNameStr.indexOf(",") > 0)
+            temNameList = this.newNameStr.split(",");
+        else
+            temNameList = this.newNameStr.trim().split(/\s+/);
+        var temNames = [];
+        for (var i=0; i < temNameList.length; i++) {
+            var temName = temNameList[i].trim();
+            if (temName)
+                temNames.push(temName);
+        }
+        var temNameStr = temNames.join(";");
+        if (!this.curNameSpec) 
+           this.curNameStr = temNameStr;
+        this.sessionTime = curDate;
+        wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, time: this.sessionTime};
+        setState(wheelState);
+
+        if (this.curNameSpec) {
+            alert("Restoring session "+this.sessionID);
+            reloadPage(this.sessionID);
+        } else if (window.confirm("Start new session "+this.sessionID )) {
+            reloadPage(this.sessionID);
+        }
+    }
+
+    this.allNameList = wheelState[this.sessionID].allNames.split(";"); 
+    var allNameObj = {};
+    for (var i=0; i < this.allNameList.length; i++) {
+       allNameObj[this.allNameList[i]] = 1;
+    }
+
+    var nameList = this.curNameStr.split(";");
+    this.curNames = [];
+    for (var i=0; i < nameList.length; i++) {
+        if (nameList[i] in allNameObj)
+           this.curNames.push(nameList[i]);
+    }
+
+    showSessions(this.sessionID);
+}
+
+WheelSession.prototype.displayWheel = function () {
+    console.log('WheelSession.displayWheel:', this.curNames);
+    if (!this.curNames || !this.curNames.length)
+       return;
+
+    $(document).attr('title', 'Qwheel: '+this.sessionID);
+    $("#sessiontitle").text(this.sessionID);
+    $("#sessiontime").text(this.sessionTime);
+    $("#sessioncount").text(this.curNames.length+" of "+this.allNameList.length);
+    if (displayStats) this.showStats();
+
+    var displayRange = selectRange(this.curNames.length, maxDisplay);
+    var d0 = displayRange[0];
+    var d1 = displayRange[1];
+    var items = {};
+    for(var i=d0; i < d1; i++){
+        items[i] = this.curNames[i];
+    }
+    if (d0 > 0 || d1 < this.curNames.length) $("#sessionrange").text(this.curNames[d0]+" - "+this.curNames[d1-1]);
+
+    var audioElement = null;
+    try { audioElement = document.createElement("audio");
+          audioElement.setAttribute("src", "prize_wheel.mp3");
+    } catch (err) { console.log("Error in audio:", err);
+    }
+
+    var roulettePars = {
+        items : items,
+        start : function() {
+             try { audioElement.play(); } catch (err) {}
+        },
+
+        selected : function(key, value) {
+          console.log("selected:", key, value);
+          try { audioElement.pause();
+                audioElement.currentTime = 0; } catch (err) {}
+
+          accumStats(statsObj, key, Qwheel.session.curNames.length);
+          saveStats(statsObj);
+          if (window.confirm("Selected name: "+value+";\n Remove?" )) {
+            var newNames = [];
+            for (var i=0; i < Qwheel.session.curNames.length; i++) {
+              if (value != Qwheel.session.curNames[i])
+                newNames.push(Qwheel.session.curNames[i]);
+            }
+            Qwheel.session.curNames = newNames;
+            wheelState[Qwheel.session.sessionID].names = Qwheel.session.curNames.join(";");
+            setState(wheelState);
+          }
+          if (Qwheel.session.curNames.length < minDisplay) {
+              Qwheel.wheelRestart();
+          } else {
+              reloadPage(Qwheel.session.sessionID);
+          }
+        },
+        spinText : "SPIN",
+    }
+    $("#canvas").rouletteWheel(roulettePars);
+}
+
+WheelSession.prototype.showStats = function () {
+   var niter = 100000;
+   var temStats = resetStats();
+   var maxCount = this.curNames.length;
+   for (var count=minDisplay; count<=maxCount; count++) {
+      var nportions = Math.ceil(count/maxDisplay);
+      var portionCount = new Uint32Array(nportions);
+      for (var i=0; i<niter; i++) {
+         var displayRange = selectRange(count, maxDisplay);
+         var isel = displayRange[0] + Math.floor(Math.random()*(displayRange[1]-displayRange[0]));
+         accumStats(temStats, isel, count);
+         portionCount[Math.ceil(displayRange[0]/maxDisplay)] += 1;
+      }
+      var nfrac = new Float32Array(nportions);
+      for (var j=0; j<nportions; j++) nfrac[j] = portionCount[j]/(1.0*niter);
+      console.log("portionStats: ", count, nfrac);
+   }
+
+   var output = "Test iterations = "+niter+"\n";
+   for (var j=0; j<maxCount; j++) {
+      output += "Test probability: "+temStats.fraction[j]+" \t"+this.curNames[j]+"\n";
+   }
+
+   if (statsObj) {
+      output += "\nActual iterations = "+statsObj.count+"\n";
+      for (var j=0; j<maxCount; j++) {
+         output += "Actual probability of name"+(j+1)+": "+statsObj.fraction[j]+"\n";
+      }
+   }
+
+   $("#pretext").text(output);
+   console.log("showStats: ", temStats);
+}
+
+
+var temSessionID = getParameterByName('session') || '';
+if (temSessionID == 'default')
+   temSessionID = '';
+
+var curSession = new WheelSession(temSessionID);
+Qwheel.session = curSession;
+
+if (getParameterByName('reset')) {
+    Qwheel.wheelReset();
 }
 
 if (getParameterByName('clear')) {
-    wheelClear();
+    curSession.wheelClear();
 }
 
 if (getParameterByName('restart')) {
-    wheelRestart();
+    curSession.wheelRestart();
 }
 
-var displayStats = getParameterByName('stats');
-var statsObj = getStats();  
-var wheelState = getState();
-
-function setupWheel(newNameStr) {  
-var curNameSpec = getParameterByName('curnames') || "";   
-
-var curNameStr = curNameSpec;
-var sessionTime = "";
-
-if (sessionID in wheelState) {
-   sessionTime = wheelState[sessionID].time;
-   if (!curNameSpec) 
-      curNameStr = wheelState[sessionID].names;
+Qwheel.readyAux = function () {
+    curSession.start();
+    curSession.displayWheel();
 }
 
-if (!newNameStr)
-   newNameStr = getParameterByName('names');
+function showSessions(sessionID) {
+    // Session menu
+    $.each(wheelState, function(key, value) { 
+           $('#stateSelect')
+               .append($("<option></option>")
+               .attr("value",key)
+               .text(key?key:'default')); 
+		 });
 
-if (!newNameStr && !curNameStr) {
-    showPopup();
-    return;
-}
+    $('#stateSelect')
+               .append($("<option></option>")
+               .attr("value","NEW")
+               .text("NEW")); 
 
-if (newNameStr) {
-    var temNameList;
-    if (newNameStr.indexOf("\r") > 0 || newNameStr.indexOf("\n") > 0)
-       temNameList = newNameStr.trim().split(/[\r\n]+/);
-    else if (newNameStr.indexOf(";") > 0) 
-       temNameList = newNameStr.split(";")
-    else if (newNameStr.indexOf(",") > 0)
-       temNameList = newNameStr.split(",");
-    else
-       temNameList = newNameStr.trim().split(/\s+/);
-    var temNames = [];
-    for (var i=0; i < temNameList.length; i++) {
-        var temName = temNameList[i].trim();
-        if (temName)
-            temNames.push(temName);
-    }
-    var temNameStr = temNames.join(";");
-    if (!curNameSpec) 
-       curNameStr = temNameStr;
-    sessionTime = curDate;
-    wheelState[sessionID] = {names: curNameStr, allNames: temNameStr, time: sessionTime};
-    setState(wheelState);
-}
+    $('#stateSelect').val(sessionID);
 
-if (newNameStr) {
-    if (curNameSpec) {
-       alert("Restoring session "+sessionID);
-       reloadPage();
-    } else if (window.confirm("Start new session "+sessionID )) {
-       reloadPage();
-    }
-}
-
-var allNameList = wheelState[sessionID].allNames.split(";"); 
-var allNameObj = {};
-for (var i=0; i < allNameList.length; i++) {
-   allNameObj[allNameList[i]] = 1;
-}
-
-var nameList = curNameStr.split(";"); 
-var curNames = [];
-for (var i=0; i < nameList.length; i++) {
-    if (nameList[i] in allNameObj)
-       curNames.push(nameList[i]);
+    $('#stateSelect').change(function() {
+       var selState = $('#stateSelect :selected').val();
+       console.log("Selected state '"+selState+"'");
+       if (selState == sessionID)
+           return;
+       var newSessionID = '';
+       if (selState == "NEW") {
+           selState = window.prompt('Enter new session name (no spaces):');
+           if (selState)
+              newSessionID = selState.replace(/ /g,'');
+        } else {
+           newSessionID = selState;
+        }
+	reloadPage(newSessionID);
+    });
+		 
 }
 
 function selectRange(nitems, nportion) {
@@ -250,138 +399,9 @@ function selectRange(nitems, nportion) {
    return [startOffset, endOffset];
 }
 
-function showStats() {
-   var niter = 100000;
-   var temStats = resetStats();
-   var maxCount = curNames.length;
-   for (var count=minDisplay; count<=maxCount; count++) {
-      var nportions = Math.ceil(count/maxDisplay);
-      var portionCount = new Uint32Array(nportions);
-      for (var i=0; i<niter; i++) {
-         var displayRange = selectRange(count, maxDisplay);
-         var isel = displayRange[0] + Math.floor(Math.random()*(displayRange[1]-displayRange[0]));
-         accumStats(temStats, isel, count);
-         portionCount[Math.ceil(displayRange[0]/maxDisplay)] += 1;
-      }
-      var nfrac = new Float32Array(nportions);
-      for (var j=0; j<nportions; j++) nfrac[j] = portionCount[j]/(1.0*niter);
-      console.log("portionStats: ", count, nfrac);
-   }
-
-   var output = "Test iterations = "+niter+"\n";
-   for (var j=0; j<maxCount; j++) {
-      output += "Test probability: "+temStats.fraction[j]+" \t"+curNames[j]+"\n";
-   }
-
-   if (statsObj) {
-      output += "\nActual iterations = "+statsObj.count+"\n";
-      for (var j=0; j<maxCount; j++) {
-         output += "Actual probability of name"+(j+1)+": "+statsObj.fraction[j]+"\n";
-      }
-   }
-
-   $("#pretext").text(output);
-   console.log("showStats: ", temStats);
-}
-
-function displayWheel() {
-    $.each(wheelState, function(key, value) {  
-           $('#stateSelect')
-               .append($("<option></option>")
-               .attr("value",key)
-               .text(key?key:'default')); 
-		 });
-
-    $('#stateSelect')
-               .append($("<option></option>")
-               .attr("value","NEW")
-               .text("NEW")); 
-
-    $('#stateSelect').val(sessionID);
-
-    $('#stateSelect').change(function() {
-       var selState = $('#stateSelect :selected').val();
-       console.log("Selected state '"+selState+"'");
-       if (selState == sessionID)
-           return;
-       if (selState == "NEW") {
-           selState = window.prompt('Enter new session name (no spaces):');
-           if (selState)
-              sessionID = selState.replace(/ /g,'');
-        } else {
-           sessionID = selState;
-        }
-	reloadPage();
-    });
-		 
-    if (!curNames || !curNames.length)
-       return;
-
-    $(document).attr('title', 'Qwheel: '+sessionID);
-    $("#sessiontitle").text(sessionID);
-    $("#sessiontime").text(sessionTime);
-    $("#sessioncount").text(curNames.length+" of "+allNameList.length);
-    if (displayStats) showStats();
-
-    var displayRange = selectRange(curNames.length, maxDisplay);
-    var d0 = displayRange[0];
-    var d1 = displayRange[1];
-    var items = {};
-    for(var i=d0; i < d1; i++){
-        items[i] = curNames[i];
-    }
-    if (d0 > 0 || d1 < curNames.length) $("#sessionrange").text(curNames[d0]+" - "+curNames[d1-1]);
-
-    var audioElement = null;
-    try { audioElement = document.createElement("audio");
-          audioElement.setAttribute("src", "prize_wheel.mp3");
-    } catch (err) { console.log("Error in audio:", err);
-    }
-
-    var roulettePars = {
-        items : items,
-        start : function() {
-             try { audioElement.play(); } catch (err) {}
-        },
-
-        selected : function(key, value) {
-          console.log("selected:", key, value);
-          try { audioElement.pause();
-                audioElement.currentTime = 0; } catch (err) {}
-
-          accumStats(statsObj, key, curNames.length);
-          saveStats(statsObj);
-          if (window.confirm("Selected name: "+value+";\n Remove?" )) {
-            var newNames = [];
-            for (var i=0; i < curNames.length; i++) {
-              if (value != curNames[i])
-                newNames.push(curNames[i]);
-            }
-            curNames = newNames;
-            wheelState[sessionID].names = curNames.join(";");
-            setState(wheelState);
-          }
-          if (curNames.length < minDisplay) {
-              wheelRestart();
-          } else {
-              reloadPage();
-          }
-        },
-        spinText : "SPIN",
-    }
-    $("#canvas").rouletteWheel(roulettePars);
-}
-
-displayWheel();
-
-}
-
-function readyAux() {setupWheel();}
-$(document).ready( readyAux );
-
 // Popup: http://www.loginradius.com/engineering/simple-popup-tutorial/
 
-function showPopup() {
+function showPopup(submitCallback) {
     var divElem = document.getElementById('popup-container');
     var overlayElem = document.getElementById('popup-overlay');
     var contentElem = document.getElementById('popup-content');
@@ -400,9 +420,13 @@ function showPopup() {
     submitElem.onclick = function () {
        closePopup();
        var val = contentElem.value.trim() || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
-       setupWheel(val);
+       if (submitCallback)
+           submitCallback(val);
     }
 }
+})(jQuery, Qwheel);
+
+$(document).ready( Qwheel.readyAux );
 
 	</script>
 <style>
@@ -465,9 +489,9 @@ body { font-family: arial, helvetica, sans-serif; }
 <body>
       <b>Qwheel</b>
       session: <select id="stateSelect"></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <a href="#" onclick="wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
-      <a href="#" onclick="wheelClear();">Delete</a>&nbsp;&nbsp;&nbsp;
-      <a href="#" onclick="wheelExport();">Export</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="Qwheel.session.wheelRestart();">Restart</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="Qwheel.session.wheelClear();">Delete</a>&nbsp;&nbsp;&nbsp;
+      <a href="#" onclick="Qwheel.session.wheelExport();">Export</a>&nbsp;&nbsp;&nbsp;
       <a href="help.html" target="_blank">Help</a>&nbsp;&nbsp;&nbsp;
       <a href="https://github.com/mitotic/Qwheel" target="_blank">Github</a>
     <p>
