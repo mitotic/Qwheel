@@ -10,7 +10,6 @@
 var Qwheel = {};
 
 (function ($, Qwheel) {
-// Modified from https://github.com/JavoByte/rouletteWheel/demo.html
 var defaultMax = 30;
 var defaultMin = 1;
 
@@ -111,72 +110,36 @@ function WheelSession(sessionID) {
 
     this.curNameStr = this.curNameSpec;
     this.sessionTime = "";
+}
 
+WheelSession.prototype.start = function () {
+    console.log('WheelSession.start:');
     if (this.sessionID in wheelState) {
         this.sessionTime = wheelState[this.sessionID].time;
         if (!this.curNameSpec) 
             this.curNameStr = wheelState[this.sessionID].names;
     }
-}
 
-WheelSession.prototype.wheelClear = function () {
-    if (!window.confirm("Delete session "+this.sessionID+"?")) {
-       return;
-    }
-    if (this.sessionID in wheelState) {
-        delete wheelState[this.sessionID];
-    }
-    setState(wheelState);
-    reloadPage('');
-}
-
-WheelSession.prototype.wheelRestart = function () {
-   if (this.sessionID in wheelState) {
-      wheelState[this.sessionID].names = wheelState[this.sessionID].allNames;
-      wheelState[this.sessionID].time = curDate;
-      setState(wheelState);
-      reloadPage(this.sessionID);
-   }
-}
-
-WheelSession.prototype.wheelExport = function () {
-   var sessionID = this.sessionID;
-   var query = sessionID ? ('?session='+sessionID) : ''
-   if (maxDisplay != defaultMax)
-      query += (query ? '&' : '?') + 'max='+maxDisplay;
-   query += (query ? '&' : '?')+'names=';
-   query += encodeURI(wheelState[sessionID].allNames.replace(/ /g, '+'));
-   if (wheelState[sessionID].names != wheelState[sessionID].allNames) {
-      query += '&curnames=';
-      query += encodeURI(wheelState[sessionID].names.replace(/ /g, '+'));
-   }
-   $('body').text(window.location.origin+window.location.pathname+query);
-}
-
-
-WheelSession.prototype.start = function (newNameStr) {
-    console.log('WheelSession.start:');
-    if (!newNameStr && !this.curNameStr) {
-        showPopup(this.setupWheel.bind(this));
-        return;
-    }
-    this.setupWheel();
+    var newNameStr = getParameterByName('names');
+    if (!newNameStr && !this.curNameStr)
+        showPopup(this.setupWheel.bind(this));  // Enter name list through dialog box
+    else
+        this.setupWheel(newNameStr);
 }
 
 WheelSession.prototype.setupWheel = function (newNameStr) {
     console.log('WheelSession.setupWheel:', newNameStr);
-    this.newNameStr = newNameStr || getParameterByName('names');
 
-    if (this.newNameStr) {
+    if (newNameStr) {
         var temNameList;
-        if (this.newNameStr.indexOf("\r") > 0 || this.newNameStr.indexOf("\n") > 0)
-            temNameList = this.newNameStr.trim().split(/[\r\n]+/);
-        else if (this.newNameStr.indexOf(";") > 0) 
-            temNameList = this.newNameStr.split(";")
-        else if (this.newNameStr.indexOf(",") > 0)
-            temNameList = this.newNameStr.split(",");
+        if (newNameStr.indexOf("\r") > 0 || newNameStr.indexOf("\n") > 0)
+            temNameList = newNameStr.trim().split(/[\r\n]+/);
+        else if (newNameStr.indexOf(";") > 0) 
+            temNameList = newNameStr.split(";")
+        else if (newNameStr.indexOf(",") > 0)
+            temNameList = newNameStr.split(",");
         else
-            temNameList = this.newNameStr.trim().split(/\s+/);
+            temNameList = newNameStr.trim().split(/\s+/);
         var temNames = [];
         for (var i=0; i < temNameList.length; i++) {
             var temName = temNameList[i].trim();
@@ -190,12 +153,11 @@ WheelSession.prototype.setupWheel = function (newNameStr) {
         wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, time: this.sessionTime};
         setState(wheelState);
 
-        if (this.curNameSpec) {
-            alert("Restoring session "+this.sessionID);
-            reloadPage(this.sessionID);
-        } else if (window.confirm("Start new session "+this.sessionID )) {
-            reloadPage(this.sessionID);
-        }
+        ///if (this.curNameSpec) {
+        ///    alert("Restoring session "+this.sessionID);
+        ///} else if (window.confirm("Start new session "+this.sessionID )) {
+        ///}
+        reloadPage(this.sessionID);
     }
 
     this.allNameList = wheelState[this.sessionID].allNames.split(";"); 
@@ -215,6 +177,7 @@ WheelSession.prototype.setupWheel = function (newNameStr) {
 }
 
 WheelSession.prototype.displayWheel = function () {
+// Modified from https://github.com/JavoByte/rouletteWheel/demo.html 
     console.log('WheelSession.displayWheel:', this.curNames);
     if (!this.curNames || !this.curNames.length)
        return;
@@ -273,6 +236,41 @@ WheelSession.prototype.displayWheel = function () {
     }
     $("#canvas").rouletteWheel(roulettePars);
 }
+
+WheelSession.prototype.wheelClear = function () {
+    if (!window.confirm("Delete session "+this.sessionID+"?")) {
+       return;
+    }
+    if (this.sessionID in wheelState) {
+        delete wheelState[this.sessionID];
+    }
+    setState(wheelState);
+    reloadPage('');
+}
+
+WheelSession.prototype.wheelRestart = function () {
+   if (this.sessionID in wheelState) {
+      wheelState[this.sessionID].names = wheelState[this.sessionID].allNames;
+      wheelState[this.sessionID].time = curDate;
+      setState(wheelState);
+      reloadPage(this.sessionID);
+   }
+}
+
+WheelSession.prototype.wheelExport = function () {
+   var sessionID = this.sessionID;
+   var query = sessionID ? ('?session='+sessionID) : ''
+   if (maxDisplay != defaultMax)
+      query += (query ? '&' : '?') + 'max='+maxDisplay;
+   query += (query ? '&' : '?')+'names=';
+   query += encodeURI(wheelState[sessionID].allNames.replace(/ /g, '+'));
+   if (wheelState[sessionID].names != wheelState[sessionID].allNames) {
+      query += '&curnames=';
+      query += encodeURI(wheelState[sessionID].names.replace(/ /g, '+'));
+   }
+   $('body').text(window.location.origin+window.location.pathname+query);
+}
+
 
 WheelSession.prototype.showStats = function () {
    var niter = 100000;
@@ -511,7 +509,7 @@ body { font-family: arial, helvetica, sans-serif; }
         <span id="popup-close" class="popup-close">X</span>
     </div>
     -->
-    Enter a list of names, separated by line-breaks, semicolons, commas or spaces:
+    Enter the list of names, one per line:
     &nbsp;&nbsp;&nbsp;&nbsp; <button id="popup-submit" class="popup-submit">Submit</button>
     <textarea id="popup-content" class="popup-content" name="textarea" rows="12">
 Jane Doe
