@@ -135,6 +135,7 @@ function wheelExport() {
    $('body').text(window.location.origin+window.location.pathname+query);
 }
 
+
 if (getParameterByName('clearall')) {
     wheelClearAll();
 }
@@ -151,6 +152,7 @@ var displayStats = getParameterByName('stats');
 var statsObj = getStats();  
 var wheelState = getState();
 
+function setupWheel(newNameStr) {  
 var curNameSpec = getParameterByName('curnames') || "";   
 
 var curNameStr = curNameSpec;
@@ -162,10 +164,12 @@ if (sessionID in wheelState) {
       curNameStr = wheelState[sessionID].names;
 }
 
-var newNameStr = getParameterByName('names');
+if (!newNameStr)
+   newNameStr = getParameterByName('names');
+
 if (!newNameStr && !curNameStr) {
-    newNameStr = window.prompt("Enter a list of names, separated by line-breaks, semicolons, commas or spaces:",
-"Jane Doe;John Doe;John Smith") || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
+    showPopup();
+    return;
 }
 
 if (newNameStr) {
@@ -180,7 +184,9 @@ if (newNameStr) {
        temNameList = newNameStr.trim().split(/\s+/);
     var temNames = [];
     for (var i=0; i < temNameList.length; i++) {
-        temNames.push($.trim(temNameList[i]));
+        var temName = temNameList[i].trim();
+        if (temName)
+            temNames.push(temName);
     }
     var temNameStr = temNames.join(";");
     if (!curNameSpec) 
@@ -278,9 +284,8 @@ function showStats() {
    console.log("showStats: ", temStats);
 }
 
-
 function displayWheel() {
-    $.each(wheelState, function(key, value) {   
+    $.each(wheelState, function(key, value) {  
            $('#stateSelect')
                .append($("<option></option>")
                .attr("value",key)
@@ -367,11 +372,94 @@ function displayWheel() {
     $("#canvas").rouletteWheel(roulettePars);
 }
 
-$(document).ready( displayWheel );
+displayWheel();
+
+}
+
+function readyAux() {setupWheel();}
+$(document).ready( readyAux );
+
+// Popup: http://www.loginradius.com/engineering/simple-popup-tutorial/
+
+function showPopup() {
+    var divElem = document.getElementById('popup-container');
+    var overlayElem = document.getElementById('popup-overlay');
+    var contentElem = document.getElementById('popup-content');
+    overlayElem.style.display = 'block';
+    divElem.style.display = 'block';
+
+    function closePopup() {
+       overlayElem.style.display = 'none';
+       divElem.style.display = 'none';
+    } 
+    var closeElem = document.getElementById('popup-close');
+    if (closeElem)
+        closeElem.onclick = closePopup;
+
+    var submitElem = document.getElementById('popup-submit');
+    submitElem.onclick = function () {
+       closePopup();
+       var val = contentElem.value.trim() || "alpha;beta;gamma;delta;epsilon;zeta;eta;theta;iota";
+       setupWheel(val);
+    }
+}
 
 	</script>
 <style>
 body { font-family: arial, helvetica, sans-serif; }
+
+/* Popup */
+#popup-overlay {
+    display: none;
+    position: absolute;
+    z-index: 2000;
+    opacity: 0.7;
+    top: 0;
+    bottom: 0;
+    background: #999;
+    width: 100%;
+    height: 100%;
+}
+
+.popup-container {
+    font-family: Helvetica, Arial, freesans, sans-serif;
+    display: none;
+    position: absolute;
+    z-index: 2100;
+    top: 100px;
+    left: 50%;
+    width: 360px;
+    margin-left: -250px; /*Half the value of width to center div*/
+    /* margin-top: -100px;  Half the value of height to center div*/
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.popup-controls {
+}
+
+.popup-close {
+  float: right;
+  padding: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.popup-submit {
+  float: right;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 6px;
+  margin-right: 12px;
+}
+
+.popup-content {
+  padding: 2px;
+  height: auto;
+  margin: 10px;
+  width: 90%;
+}
 </style>
 </head>
 <body>
@@ -390,6 +478,23 @@ body { font-family: arial, helvetica, sans-serif; }
     <p>
     <canvas id="canvas" width="500" height="500"></canvas>
     <pre id="pretext"></pre>
-	
+
+<div id="popup-overlay"></div>
+
+<div id="popup-container" class="popup-container">
+    <!--
+    <div class="popup-controls">
+        <span id="popup-close" class="popup-close">X</span>
+    </div>
+    -->
+    Enter a list of names, separated by line-breaks, semicolons, commas or spaces:
+    &nbsp;&nbsp;&nbsp;&nbsp; <button id="popup-submit" class="popup-submit">Submit</button>
+    <textarea id="popup-content" class="popup-content" name="textarea" rows="12">
+Jane Doe
+John Doe
+John Smith
+    </textarea>
+</div>
+
 </body>
 </html>
