@@ -141,16 +141,26 @@ WheelSession.prototype.setupWheel = function (newNameStr) {
         else
             temNameList = newNameStr.trim().split(/\s+/);
         var temNames = [];
+        var dispNameDict = {};
         for (var i=0; i < temNameList.length; i++) {
+            
             var temName = temNameList[i].trim();
-            if (temName)
+            var dispName = temName;
+            if (temName.indexOf("/") > 0) {
+               var temNameComps = temName.split('/');
+               temName = temNameComps[0].trim();
+               dispName = temNameComps[1].trim()
+            }
+            if (temName) {
                 temNames.push(temName);
+                dispNameDict[temName] = dispName;
+            }
         }
         var temNameStr = temNames.join(";");
         if (!this.curNameSpec) 
            this.curNameStr = temNameStr;
         this.sessionTime = curDate;
-        wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, time: this.sessionTime};
+        wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, dispNames: dispNameDict, time: this.sessionTime};
         setState(wheelState);
 
         ///if (this.curNameSpec) {
@@ -161,15 +171,16 @@ WheelSession.prototype.setupWheel = function (newNameStr) {
     }
 
     this.allNameList = wheelState[this.sessionID].allNames.split(";"); 
-    var allNameObj = {};
+    this.allNameObj = {};
     for (var i=0; i < this.allNameList.length; i++) {
-       allNameObj[this.allNameList[i]] = 1;
+       var name = this.allNameList[i];
+       this.allNameObj[name] = wheelState[this.sessionID].dispNames[name] || name;
     }
 
     var nameList = this.curNameStr.split(";");
     this.curNames = [];
     for (var i=0; i < nameList.length; i++) {
-        if (nameList[i] in allNameObj)
+        if (nameList[i] in this.allNameObj)
            this.curNames.push(nameList[i]);
     }
 
@@ -216,7 +227,7 @@ WheelSession.prototype.displayWheel = function () {
 
           accumStats(statsObj, key, Qwheel.session.curNames.length);
           saveStats(statsObj);
-          if (window.confirm("Selected name: "+value+";\n Remove?" )) {
+          if (window.confirm("Selected name: "+(Qwheel.session.allNameObj[value]||value)+";\n Remove?" )) {
             var newNames = [];
             for (var i=0; i < Qwheel.session.curNames.length; i++) {
               if (value != Qwheel.session.curNames[i])
@@ -227,7 +238,7 @@ WheelSession.prototype.displayWheel = function () {
             setState(wheelState);
           }
           if (Qwheel.session.curNames.length < minDisplay) {
-              Qwheel.wheelRestart();
+              Qwheel.session.wheelRestart();
           } else {
               reloadPage(Qwheel.session.sessionID);
           }
