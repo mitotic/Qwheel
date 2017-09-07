@@ -227,7 +227,7 @@ WheelSession.prototype.displayWheel = function () {
 
           accumStats(statsObj, key, Qwheel.session.curNames.length);
           saveStats(statsObj);
-          if (window.confirm("Selected name: "+(Qwheel.session.allNameObj[value]||value)+";\n Remove?" )) {
+          if (window.confirm("Selected: "+(Qwheel.session.allNameObj[value]||value)+".\n Remove?" )) {
             var newNames = [];
             for (var i=0; i < Qwheel.session.curNames.length; i++) {
               if (value != Qwheel.session.curNames[i])
