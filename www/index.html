@@ -127,8 +127,10 @@ WheelSession.prototype.start = function () {
         if (!this.curNameSpec) 
             this.curNameStr = wheelState[this.sessionID].names;
     } else {
-        this.sessionTitle = getParameterByName('title') || '';
+        this.sessionTitle = '';
     }
+    if (getParameterByName('title'))
+        this.sessionTitle = getParameterByName('title');
 
     var newNameStr = getParameterByName('names');
     if (!newNameStr && !this.curNameStr)
