@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html>
+<!--
+Action parameters
+?clear=1:   Delete current session
+?reset=1:   Delete current session and reload page (creating new session)
+?restart=1: Restart session (restoring all dropped names)
+?stats=1:   Display stats
+-->
 <head>
    <title></title>
    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
@@ -115,9 +122,12 @@ function WheelSession(sessionID) {
 WheelSession.prototype.start = function () {
     console.log('WheelSession.start:');
     if (this.sessionID in wheelState) {
+        this.sessionTitle = wheelState[this.sessionID].sessionTitle;
         this.sessionTime = wheelState[this.sessionID].time;
         if (!this.curNameSpec) 
             this.curNameStr = wheelState[this.sessionID].names;
+    } else {
+        this.sessionTitle = getParameterByName('title') || '';
     }
 
     var newNameStr = getParameterByName('names');
@@ -160,7 +170,7 @@ WheelSession.prototype.setupWheel = function (newNameStr) {
         if (!this.curNameSpec) 
            this.curNameStr = temNameStr;
         this.sessionTime = curDate;
-        wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, dispNames: dispNameDict, time: this.sessionTime};
+        wheelState[this.sessionID] = {names: this.curNameStr, allNames: temNameStr, dispNames: dispNameDict, time: this.sessionTime, sessionTitle: this.sessionTitle};
         setState(wheelState);
 
         ///if (this.curNameSpec) {
@@ -193,8 +203,8 @@ WheelSession.prototype.displayWheel = function () {
     if (!this.curNames || !this.curNames.length)
        return;
 
-    $(document).attr('title', 'Qwheel: '+this.sessionID);
-    $("#sessiontitle").text(this.sessionID);
+    $(document).attr('title', 'Qwheel: '+(this.sessionTitle||this.sessionId));
+    $("#sessiontitle").text(this.sessionTitle);
     $("#sessiontime").text(this.sessionTime);
     $("#sessioncount").text(this.curNames.length+" of "+this.allNameList.length);
     if (displayStats) this.showStats();
@@ -504,6 +514,7 @@ body { font-family: arial, helvetica, sans-serif; }
       <a href="help.html" target="_blank">Help</a>&nbsp;&nbsp;&nbsp;
       <a href="https://github.com/mitotic/Qwheel" target="_blank">Github</a>
     <p>
+    <h3 id="sessiontitle"></h3>
     <span id="header">Started: <em id="sessiontime"></em> (<b id="sessioncount"></b>)
     </span>
     <h3><em id="sessionrange"></em>
