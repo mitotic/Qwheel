@@ -15,12 +15,15 @@ this behavior is optional). Using [Qwheel](https://mitotic.github.io/Qwheel) is 
 fairly distribute questions in the class, get to know the names of
 your students, and keep them attentive.
 
-To use `Qwheel`, visit [https://mitotic.github.io/wheel](https://mitotic.github.io/wheel)
+This document provides information on how to use `Qwheel`, which is
+located at the URL https://mitotic.github.io/wheel
 
 ## Setup
 
 No accounts or logins required! Create a list of names
-from the class roster. You can use full names, or an abbreviated form,
+from the class roster and enter in the dialog box when requested.
+
+- You can use full names, or an abbreviated form,
 such as first name plus enough letters from the last name to make it
 unique, e.g., ``JaneDo; JohnS``.
 
