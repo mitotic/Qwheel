@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Qwheel Help</title>
+<style>
+body { font-family:'Helvetica Neue', Helvetica, 'Segoe UI', Arial, freesans, sans-serif;
+line-height: 1.35;
+max-width: 960px;
+ }
+</style>
+</head>
+
+<body>
+<h1><a href="https://mitotic.github.io/Qwheel">Qwheel: Question Wheel</a></h1>
+
+A common problem facing teachers is that if you pose a question to a
+class, the same few students, usually in the first row, answer
+them. These students are typically not representative of the class,
+being more advanced and/or paying attention. To get around this
+problem, Qwheel uses a spinning "prize wheel" image (+sound) to
+randomly select a name from a list. Once a name is selected, it is
+removed from the list (although this behavior can be
+suppressed). Using Qwheel is a great way to fairly distribute
+questions in the class, get to know the names of your
+students, and keep them attentive.
+
+<p></p>
+
+<b>Setup</b>: No accounts or logins required! Create a list of names
+from the class roster. You can use full names, or an abbreviated form,
+such as first name plus enough letters from the last name to make it
+unique, e.g., <tt>JaneDo; JohnS</tt>. Names in the list may be
+separated by line-breaks, semicolons, commas or spaces. You can create a
+line-break-separated list of names by simply copying from an Excel
+spreadsheet column, or from a file with a name in each line, and
+pasting it into the dialog box when requested. The <em>Export</em>
+option in the drop-down menu may be used to generate an URL that can
+be copied to re-create the name list in a different browser. (To use
+Qwheel without accessing the web, see <em>Code</em> info below.)
+
+<p></p>
+
+<b>Usage</b>: Click on SPIN to rotate the wheel. When a name is
+selected, a dialog box will appear. Clicking <em>OK</em> will remove the
+selected name from the list, clicking <em>Cancel</em> will retain the name.
+
+<p></p>
+
+<b>Sessions</b>: A sequence of spins starting with a new list of names
+is referred to as a <em>session</em>. The default session has a blank
+name. Alternate session names are specified using the optional
+<tt>session</tt> parameter in the URL and persist indefinitely in the
+browser (using information stored in browser's offline local
+storage). The drop-down menu may be used to switch between sessions or
+create a new session. <em>Restarting</em> a session will restore the
+original list of names. <em>Deleting</em> a session will erase it from
+the browser. (Deleting the default session will re-create it.)
+<em>Exporting</em> a session displays an URL that can be copied and
+pasted in a different browser.
+
+<p></p>
+
+<b>Creating URLs</b>: As an alternative to copying/pasting names, you
+can generate a permanent URL for creating a new session. Start with a
+list of semicolon- or comma-separated names. If there are any spaces
+within names, replace them with plus (+) signs. Then generate a URL
+string that looks like this: <br> <tt><a
+href="https://mitotic.github.io/wheel/?session=math101&names=Jane+Doe;John+Doe;John+Smith">https://mitotic.github.io/wheel/?session=math101&names=Jane+Doe;John+Doe;John+Smith</a></tt>
+
+This URL can be stored in a file and reused to restart a session, as
+needed. Note that the query symbol (<tt>?</tt>) denotes the start of
+the parameter list and the ampersand (<tt>&amp;</tt>) separates
+different parameters. The optional <tt>session</tt> parameter enables
+multiple parallel sessions. Another optional parameter <tt>max</tt>
+may be used to specify the maximum number of names displayed (default:
+30). If there are more names than this maximum, a random subset of
+consecutive names from the list is pre-selected and displayed in the
+wheel. If the <tt>names</tt> parameter is omitted, the list of names
+can be entered manually via a dialog box.
+
+<p></p>
+
+<b>Sample URLs</b>:<br>
+<tt><a
+href="https://mitotic.github.io/wheel/">https://mitotic.github.io/wheel/</a></tt>
+<em>Enter names via dialog box for default session</em>
+<br>
+<tt><a
+href="https://mitotic.github.io/wheel/?names=JohnS,JaneD">https://mitotic.github.io/wheel/?names=JohnS,JaneD</a></tt>
+<em>Default session, comma-separated first names+last initials</em>
+<br>
+<tt><a
+href="https://mitotic.github.io/wheel/?session=calc101&max=15&names=John+Smith,
+jr.;Jane+Doe">https://mitotic.github.io/wheel/?session=calc101&max=15&names=John+Smith,jr.;Jane+Doe</a></tt>
+<em>Named session, semicolon-separated names, max. display of 15 names</em>
+
+<p></p>
+
+<b>Code</b>: The source code is available on <a
+href="https://github.com/mitotic/Qwheel">Github</a>. You can
+download the code and open the <tt>www/index.html</tt> in your browser
+to run Qwheel locally, even without an internet connection, by appending
+parameters to the file URL (<tt>.../index.html?names=...</tt>). To
+customize, modify the <tt>www/index.html</tt> file.  
+This implementation uses the jQuery
+<a href="https://github.com/JavoByte/rouletteWheel">rouletteWheel</a>
+code.
+
+<p></p>
+
+<b>Notes:</b>
+<ol>
+<li>Reloading the page helps if the wheel does not appear. 
+</li>
+<li>The maximum length of an URL is about 2000 characters. If names are
+shortened to about 10 characters each, a maximum of about 200 names
+can be handled in the URL. For a longer list, pasting into the dialog
+box should work.
+</li>
+<li>If you want Qwheel to display a full name upon selection, but a
+shorter name on the wheel, then use the syntax
+<tt>shortname/fullname</tt> for each name in the URL.
+</li>
+<li>Specify <tt>reset=1</tt> in the URL to clear all sessions. 
+</li>
+<li>An undocumented parameter <tt>stats=1</tt> can be specified to verify 
+the randomness of the selection algorithm. 
+</li>
+</ol>
+</body> </html>
