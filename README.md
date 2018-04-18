@@ -25,6 +25,10 @@ implement the web site.
 
 ## License
 
-Released under the [MIT License](http://opensource.org/licenses/MIT)
+The code is released under the [MIT License](http://opensource.org/licenses/MIT)
 
+The included audio file `prize_wheel.mp3` is an edited version of the
+original sound file obtained from
+https://freesound.org/people/tony_bear/sounds/274007/ and licensed
+under [Creative Commons 0 License](http://creativecommons.org/publicdomain/zero/1.0/)
 
