@@ -118,6 +118,7 @@ $.widget('javobyte.rouletteWheel', {
         }
 
         var widget = this;
+	this._draw() // TEMPORARY FIX
         $(this.options.pointer).load(function () {
             widget._draw();
         });
