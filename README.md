@@ -8,7 +8,7 @@ Question Wheel (Qwheel) is a front-end implementation of a spinning
 This can be used to randomly select students in a classroom to answer
 questions (with or without replacement of names).
 
-You can immediately use it at [code.mitotic.org/wheel](http://code.mitotic.org/wheel/)
+You can immediately use it at [metamodel.blog/page/wheel](https://metamodel.blog/page/wheel/)
 without having to install any code. 
 
 See the [help file](http://code.mitotic.org/wheel/help.html)
